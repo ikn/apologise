@@ -51,6 +51,7 @@ class Thing:
 
     def jump (self):
         if self.on:
+            self.level.game.play_snd('jump')
             self.body.apply_impulse((0, -conf.PLAYER_INITIAL_JUMP_FORCE))
             self.jumping = conf.PLAYER_JUMP_TIME
             return True

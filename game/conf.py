@@ -44,8 +44,9 @@ KEYS_RESET = (pg.K_r,)
 MUSIC_VOLUME = 50
 SOUND_VOLUME = 50
 EVENT_ENDMUSIC = pg.USEREVENT
-SOUNDS = {}
-SOUND_VOLUMES = {}
+SOUNDS = {'die': 8, 'step': 9, 'jump': 9, 'win': 6}
+SOUND_VOLUMES = {'jump': 2, 'step': .5}
+STEP_SND_DELAY = int(round(.2 * FPS))
 
 # world
 GRAVITY = Vec2d((0, 6000))

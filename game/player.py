@@ -26,11 +26,13 @@ class Player:
 
         self._move = set()
         self.jumping = False
+        self.step_snd = conf.STEP_SND_DELAY
         self.on = set()
         self.dirty = True
 
     def jump (self):
         if self.on:
+            self.level.game.play_snd('jump')
             self.body.apply_impulse((0, -conf.PLAYER_INITIAL_JUMP_FORCE))
             self.jumping = conf.PLAYER_JUMP_TIME
 
@@ -46,6 +48,11 @@ class Player:
         for d in move:
             if d in (0, 2):
                 f[d % 2] += 1 if d > 1 else -1
+        if f[0] != 0 and self.on:
+            self.step_snd -= 1
+            if self.step_snd == 0:
+                self.level.game.play_snd('step')
+                self.step_snd = conf.STEP_SND_DELAY
         b.apply_impulse(f * conf.PLAYER_ACCEL)
         # jump
         if 1 in move and self.jumping:

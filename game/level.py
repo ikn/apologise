@@ -204,6 +204,7 @@ class Level:
             pass
 
     def kill_thing (self, s):
+        self.game.play_snd('die')
         for t in self.things:
             if s is t.shape:
                 t.dead = True
@@ -212,6 +213,8 @@ class Level:
                 self.run_timer = conf.RUN_TIME
 
     def start_transition (self):
+        for i in xrange(8):
+            self.game.play_snd('win')
         self.transition = conf.TRANSITION_TIME
         self.transition_sfc = pg.Surface(conf.RES).convert_alpha()
         self.transition_sfc.fill(conf.TRANSITION_COLOUR)
