@@ -29,6 +29,12 @@ def col_cb (space, arbiter, level, is_sep):
             # can only have collided with the player
             level.won = True
             return False
+        # check for the trigger shapes
+        for i, shape in enumerate(level.trigger_shapes):
+            if shape in shapes:
+                # can only have collided with the player
+                level._triggers.append((level.triggers[i], shape))
+                return False
     # tell player and things if they're on the ground
     for i in (0, 1):
         s = shapes[i]
@@ -64,7 +70,6 @@ class Level:
             (conf.KEYS_RESET, lambda *args: self.init(True), eh.MODE_ONDOWN),
             (conf.KEYS_NEXT, self.skip_msg, eh.MODE_ONDOWN)
         ])
-        self.kills = 0
         self.transition = False
         # space
         self.space = s = pm.Space()
@@ -87,19 +92,31 @@ class Level:
         data = conf.LEVEL_DATA[self.ID]
         self.run_timer = 0
         self.won = False
-        self.first = True
         s = self.space
-        # messages
+        # triggers
         try:
-            s.remove_static(*self.msg_shapes)
+            s.remove_static(*self.trigger_shapes)
         except AttributeError:
             pass
+        trigger_data = data.get('triggers', [])
+        self.triggers = ts = []
+        self.trigger_shapes = tss = []
+        for pts, cb in trigger_data:
+            ts.append(cb)
+            shape = pm.Poly(s.static_body, pts)
+            shape.group = conf.SHAPE_GROUP
+            shape.layers = conf.TRIGGER_LAYER
+            shape.sensor = True
+            s.add_static(shape)
+            tss.append(shape)
+        self._triggers = []
+        # messages
         msgs = data['msg']
         if msgs[0] is None:
-            self.msgs = ()
+            self.msgs = []
             self.msg = None
         else:
-            self.msgs = msgs[:-1]
+            self.msgs = list(msgs[:-1])
             self.msg = 0
         self.end_msg = msgs[-1]
         # player
@@ -113,6 +130,8 @@ class Level:
         else:
             if reset_player:
                 self.player.body.position = data['start']
+                self.player.on = set()
+                self.player.jumping = False
             else:
                 # move player to and through entrance
                 a, b = self.exit
@@ -147,7 +166,8 @@ class Level:
             for shape in self.shapes_shapes:
                 s.remove_static(shape)
         except AttributeError:
-            self.shapes = [((0, 0), (1000, 0)), ((1000, 0), (1000, 540)), ((0, 500), (1000, 500)), ((0, 0), (0, 500))]
+            pass
+        self.shapes = [((0, 0), (1000, 0)), ((1000, 0), (1000, 540)), ((0, 500), (1000, 500)), ((0, 0), (0, 500))]
         self.shapes += data['shapes']
         self.shapes_shapes = ss = []
         for pts in self.shapes:
@@ -184,7 +204,6 @@ class Level:
             pass
 
     def kill_thing (self, s):
-        self.kills += 1
         for t in self.things:
             if s is t.shape:
                 t.dead = True
@@ -224,15 +243,12 @@ class Level:
             return
         elif self.msg is not None and self.msg < len(self.msgs) - 1:
             return
-        if self.first:
-            self.msg_shapes = []
-            for sfc, pos in self.get_msg_data():
-                r = sfc.get_bounding_rect().move(pos)
-                pts = (r.topleft, r.topright, r.bottomright, r.bottomleft)
-                shape = pm.Poly(self.space.static_body, pts)
-                self.space.add_static(shape)
-                self.msg_shapes.append(shape)
-            self.first = False
+        for cb, shape in self._triggers:
+            cb(self)
+            self.space.remove_static(shape)
+            self.triggers.remove(cb)
+            self.trigger_shapes.remove(shape)
+        self._triggers = []
         self.space.step(conf.STEP)
         self.player.update()
         rm = []
@@ -256,29 +272,6 @@ class Level:
             dt.dead = False
             ts.append(dt)
 
-    def get_msg_data (self):
-        if self.msg is None:
-            return []
-        if self.msg is True:
-            texts = self.msgs + (self.end_msg,)
-        else:
-            texts = self.msgs[:self.msg + 1]
-        size = conf.MSG_SIZE
-        font = (conf.FONT, size, False)
-        pad = conf.MSG_PADDING
-        w, h = conf.RES
-        line_spacing = conf.MSG_LINE_SPACING
-        args = [font, None, conf.MSG_COLOUR, None, w - 2 * pad, 0, False, line_spacing]
-        y = pad
-        spacing = conf.MSG_SPACING
-        data = []
-        for text in texts:
-            args[1] = text
-            sfc, lines = self.game.img(args)
-            data.append((sfc, (pad, y)))
-            y += lines * size + (lines - 1) * line_spacing + spacing
-        return data
-
     def draw (self, screen):
         if self.transition:
             screen.blit(self.transition_sfc, (0, 0))
@@ -295,9 +288,24 @@ class Level:
         for c, (a, b) in (((0, 0, 255), self.entrance), ((255, 0, 0), self.exit)):
             pg.draw.line(screen, c, a, b, conf.LINE_RADIUS * 4)
         # messages
-        data = self.get_msg_data()
-        for sfc, pos in data:
-            screen.blit(sfc, pos)
+        if self.msg is not None:
+            if self.msg is True:
+                texts = self.msgs + [self.end_msg]
+            else:
+                texts = self.msgs[:self.msg + 1]
+            size = conf.MSG_SIZE
+            font = (conf.FONT, size, False)
+            pad = conf.MSG_PADDING
+            w, h = conf.RES
+            line_spacing = conf.MSG_LINE_SPACING
+            args = [font, None, conf.MSG_COLOUR, None, w - 2 * pad, 0, False, line_spacing]
+            y = pad
+            spacing = conf.MSG_SPACING
+            for text in texts:
+                args[1] = text
+                sfc, lines = self.game.img(args)
+                screen.blit(sfc, (pad, y))
+                y += lines * size + (lines - 1) * line_spacing + spacing
         # entities
         self.player.draw(screen)
         for t in self.things:

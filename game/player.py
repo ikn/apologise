@@ -16,7 +16,7 @@ class Player:
         s.owner = self
         s.elasticity = conf.PLAYER_ELAST
         s.friction = conf.PLAYER_FRICT
-        s.layers = conf.COLLISION_LAYER | conf.DOOR_LAYER
+        s.layers = conf.COLLISION_LAYER | conf.DOOR_LAYER | conf.TRIGGER_LAYER
         level.space.add(b, s)
         # sensor for death radius
         s = self.death_shape = pm.Circle(b, conf.DEATH_RADIUS)

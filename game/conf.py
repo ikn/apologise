@@ -2,6 +2,7 @@ from os import sep
 from math import pi
 
 import pygame as pg
+import pymunk
 from pymunk import Vec2d
 
 # paths
@@ -57,6 +58,7 @@ GROUND_ANGLE_THRESHOLD = pi / 4
 COLLISION_LAYER = 2 ** 0
 DEATH_LAYER = 2 ** 1
 DOOR_LAYER = 2 ** 2
+TRIGGER_LAYER = 3 ** 2
 
 # player
 DEATH_RADIUS = 100
@@ -84,6 +86,18 @@ AI_DATA = {
 RUN_TIME = int(round(5 * FPS))
 
 # levels
+def dotdotdot (level):
+    level.msgs[2] += '...................................'
+    pts = ((531, 234), (850, 234), (850, 242), (531, 242))
+    level.shapes.append(pts)
+    p = pymunk.Poly(level.space.static_body, pts)
+    p.friction = SHAPE_FRICT
+    p.elast = SHAPE_ELAST
+    p.group = SHAPE_GROUP
+    p.layers = COLLISION_LAYER
+    level.space.add_static(p)
+    level.shapes_shapes.append(p)
+
 LEVEL_DATA = [
     {
         'start': (50, 485),
@@ -148,7 +162,7 @@ LEVEL_DATA = [
     }, {
         'start': (100, 485),
         'entrance': ((0, 400), (0, 500)),
-        'exit': ((600, 500), (800, 500)),
+        'exit': ((620, 500), (1000, 500)),
         'things': [],
         'shapes': [
             ((350, 470), (380, 470), (380, 500), (350, 500)),
@@ -158,19 +172,25 @@ LEVEL_DATA = [
             ((470, 370), (500, 370), (500, 500), (470, 500)),
             ((500, 345), (530, 345), (530, 500), (500, 500)),
             ((530, 320), (560, 320), (560, 500), (530, 500)),
-            ((560, 295), (590, 295), (590, 500), (560, 500))
+            ((560, 295), (590, 295), (590, 500), (560, 500)),
+            ((560, 295), (590, 295), (590, 500), (560, 500)),
+            ((590, 270), (620, 270), (620, 500), (590, 500)),
+            ((504, 234), (531, 234), (531, 242), (504, 242)),
+            ((850, 240), (1000, 240), (1000, 265), (850, 265))
         ],
         'msg': ("This place is supposed to hold the secret to ridding the world of all evil - or something.",
                 "I suppose that means me.",
-                "I guess I've still got a choice...", None)
+                "I guess I've still got a choice...", None),
+        'triggers': [
+            (((504, 200), (531, 200), (504, 234), (504, 234)), dotdotdot),
+            (((950, 0), (1000, 0), (1000, 240), (950, 240)), lambda level: setattr(level, 'won', True))
+        ]
     }
 ]
-# then if kills high, "No, I've killed too many: I don't deserve to live."
-# else, ?
 
 # graphics
 FONT = 'Chunk.otf'
-MSG_SIZE = 40
+MSG_SIZE = 35
 MSG_COLOUR = (0, 0, 0)
 MSG_PADDING = 20
 MSG_LINE_SPACING = 10
