@@ -59,6 +59,43 @@ def col_cb (space, arbiter, level, is_sep):
                     current.add(other)
     return True
 
+class End:
+    def __init__ (self, game, event_handler, text):
+        self.game = game
+        self.event_handler = event_handler
+        self.text = text
+        self.frame = conf.FRAME
+        event_handler.add_key_handlers([
+            (conf.KEYS_NEXT, lambda *args: self.game.quit_backend(), eh.MODE_ONDOWN)
+        ])
+
+    def update (self):
+        pass
+
+    def draw (self, screen):
+        if self.dirty:
+            screen.fill(conf.RANK_BG_COLOUR)
+            # text
+            size = conf.RANK_FONT_SIZE
+            font = (conf.FONT, size, False)
+            pad = conf.RANK_PADDING
+            w, h = conf.RES
+            args = [font, None, conf.RANK_FONT_COLOUR, None, w - 2 * pad, 1, False, conf.RANK_LINE_SPACING]
+            spacing = conf.RANK_SPACING
+            args[1] = self.text[0]
+            sfc1, lines, br = self.game.img(args)
+            args[1] = self.text[1]
+            sfc2, lines, br = self.game.img(args)
+            # blit
+            dy = sfc1.get_height() + spacing
+            y = (h - dy - sfc2.get_height()) / 2
+            screen.blit(sfc1, ((w - sfc1.get_width()) / 2, y))
+            screen.blit(sfc2, ((w - sfc2.get_width()) / 2, y + dy))
+            self.dirty = False
+            return True
+        else:
+            return False
+
 class Level:
     def __init__ (self, game, event_handler, ID = 0):
         self.game = game
@@ -82,12 +119,6 @@ class Level:
         self.ID = ID
         self.total_kills = 0
         self.init()
-
-        self.pts = []
-        def f (e, level):
-            level.pts.append(e.pos)
-            print level.pts
-        event_handler.add_event_handlers({pg.MOUSEBUTTONDOWN: [(f, (self,))]})
 
     def init (self):
         # don't allow reset when already won
@@ -249,7 +280,17 @@ class Level:
         self.game.quit_backend()
 
     def end (self):
-        self.quit()
+        # display rank
+        if self.total_kills <= conf.MIN_KILLS:
+            rank = conf.GOOD_RANK
+        elif self.total_kills < conf.MAX_KILLS:
+            rank = conf.DEFAULT_RANK
+        else:
+            rank = conf.BAD_RANK
+        self.game.start_backend(End, rank)
+        self.total_kills = 0
+        self.ID = 0
+        self.init()
 
     def update (self):
         if self.won:

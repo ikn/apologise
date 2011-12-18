@@ -129,7 +129,10 @@ by str.splitlines), as does the width restriction.
 
         # if just one line and no shadow, create and return that
         if len(lines) == 1 and shadow is None:
-            sfc = font.render(lines[0], True, colour)
+            if bg is None:
+                sfc = font.render(lines[0], True, colour)
+            else:
+                sfc = font.render(lines[0], True, colour, bg)
             return sfc, 1, (sfc.get_width(), 0)
         # else create surface to blit all the lines to
         h = size * len(lines) + line_spacing * (len(lines) - 1)

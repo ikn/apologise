@@ -1,0 +1,38 @@
+Can't Even Apologise: a game about a person-thing who kills anyone that gets
+near (he's cursed or something).
+
+This was made for Ludum Dare 22, a 48-hour competition in December 2011.
+Theme: alone.
+
+    DEPENDENCIES
+
+Python (2.6 or later 2.x)
+Pygame (1.8 or later, probably; tested with 1.9.1)
+
+    RUNNING
+
+./configure
+./run
+
+    PLAYING
+
+It should be fairly obvious that when one of the other person-things moves
+inside the big red circle around the character you control, they end up as a
+solid immoveable block.  By being careful about where this happens, you can
+reach other areas.
+
+    CONTROLS
+
+arrow keys, WASD: move.
+R: reset the level.
+enter, space: advance text.
+
+WASD works for other keyboard layouts too: QWERTZ, AZERTY, Dvorak, Colemak.
+
+To quit, close the window.
+
+    LICENSING
+
+Source code is available under the new BSD license (included).
+
+Sounds were created by Bfxr and music by Autotracker-Bu.

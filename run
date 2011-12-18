@@ -1,4 +1,4 @@
-#! /usr/bin/python2
+#! /usr/bin/python
 
 import os
 from time import time
@@ -380,6 +380,6 @@ if __name__ == '__main__':
     restarting = True
     while restarting:
         restarting = False
-        Game(Level, 4).run()
+        Game(Level, 0).run()
 
 pygame.quit()

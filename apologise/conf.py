@@ -15,7 +15,7 @@ FONT_DIR = DATA_DIR + 'font' + sep
 # display
 WINDOW_ICON = IMG_DIR + 'icon.png'
 WINDOW_TITLE = 'Can\'t Even Apologise'
-MOUSE_VISIBLE = True
+MOUSE_VISIBLE = False
 FLAGS = 0
 FULLSCREEN = False
 RESIZABLE = False
@@ -163,7 +163,7 @@ LEVEL_DATA = [
         'msg_arrow': 0,
         'music': 0
     }, {
-        'start': (436, 382),#(50, 165),
+        'start': (50, 165),
         'entrance': ((0, 120), (0, 170)),
         'exit': ((1000, 400), (1000, 500)),
         'things': [((230, 145), 1, 'walk'), ((30, 370), -1, 'walk'), ((765, 485), 1, 'walk')],
@@ -198,22 +198,25 @@ LEVEL_DATA = [
         'start': (50, 235),
         'entrance': ((0, 150), (0, 250)),
         'exit': ((1000, 60), (1000, 260)),
-        'things': [((180, 260), 1, 'walk'), ((390, 265), 1, 'walk')],
+        'things': [((180, 260), 1, 'walk'), ((390, 265), 1, 'walk'), ((740, 161), -1, 'walk')],
         'shapes': [
             ((0, 250), (190, 250), (295, 280), (300, 500), (0, 500)),
             ((105, 250), (115, 230), (140, 230), (155, 250)),
             ((175, 205), (180, 190), (570, 185), (567, 195), (275, 215)),
-            ((290, 410), (335, 408), (330, 500), (290, 500)),
-            ((320, 500), (325, 305), (630, 305), (670, 500)),
+            ((280, 500), (285, 305), (630, 305), (670, 500)),
             ((635, 342), (688, 340), (637, 485)),
             ((650, 400), (740, 380), (728, 500), (662, 500)),
             ((734, 429), (777, 421), (772, 497), (712, 498)),
             ((773, 460), (820, 455), (832, 497), (766, 498)),
             ((675, 300), (750, 300), (800, 340)),
+            ((825, 483), (936, 494), (940, 500), (825, 500)),
             ((958, 340), (1000, 335), (1000, 396)),
             ((800, 340), (960, 320), (1000, 335), (858, 363)),
             ((960, 320), (950, 260), (1000, 260), (1000, 335)),
-            ((930, 500), (935, 430), (1000, 420), (1000, 500))
+            ((930, 500), (935, 430), (1000, 420), (1000, 500)),
+            ((689, 174), (771, 178), (737, 196), (707, 191)),
+            ((695, 177), (705, 130), (702, 178)),
+            ((758, 180), (753, 132), (765, 181))
         ],
         'shape_colour': (5, 2, 0),
         'msg': (None, None),
@@ -253,11 +256,11 @@ LEVEL_DATA = [
 ]
 
 # end
-MIN_KILLS = 15
-MAX_KILLS = 16
-BAD_RANK = ('EVIL', 'You went out of your way to kill.  Way to go.'),
+MIN_KILLS = 17
+MAX_KILLS = 20
+BAD_RANK = ('EVIL', 'You went out of your way to kill.  Way to go.')
 DEFAULT_RANK = ('SYMPATHETIC', 'You didn\'t kill everyone.  I guess that\'s good?')
-GOOD_RANK = ('HEROIC', 'You went out of your way to avoid kills.  Hero indeed!')
+GOOD_RANK = ('HEROIC', 'You went out of your way to avoid kills.  Heroic indeed!')
 
 # graphics
 FONT = 'Chunk.otf'
@@ -268,6 +271,13 @@ MSG_SPACING = 40
 ARROW_PADDING = 15
 TRANSITION_TIME = int(round(1.5 * FPS))
 TRANSITION_COLOUR = (0, 0, 0, 10)
-PLAYER_IMGS = 14
+PLAYER_IMGS = 6
 THING_IMGS = PLAYER_IMGS
 STEP_IMG_DELAY = int(round(.05 * FPS))
+# end
+RANK_BG_COLOUR = (0, 0, 0)
+RANK_FONT_COLOUR = (255, 255, 255)
+RANK_FONT_SIZE = 70
+RANK_PADDING = 50
+RANK_LINE_SPACING = 20
+RANK_SPACING = 100
