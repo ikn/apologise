@@ -13,12 +13,12 @@ MUSIC_DIR = DATA_DIR + 'music' + sep
 FONT_DIR = DATA_DIR + 'font' + sep
 
 # display
-WINDOW_ICON = None #IMG_DIR + 'icon.png'
+WINDOW_ICON = IMG_DIR + 'icon.png'
 WINDOW_TITLE = ''
-MOUSE_VISIBLE = True
+MOUSE_VISIBLE = False
 FLAGS = 0
 FULLSCREEN = False
-RESIZABLE = True
+RESIZABLE = False
 SIZE = (1000, 500)
 RES_W = (1000, 500)
 RES_F = pg.display.list_modes()[0]
@@ -36,15 +36,20 @@ KEYS_BACK = (pg.K_ESCAPE, pg.K_BACKSPACE)
 KEYS_MINIMISE = (pg.K_F10,)
 KEYS_FULLSCREEN = (pg.K_F11, (pg.K_RETURN, pg.KMOD_ALT, True),
                    (pg.K_KP_ENTER, pg.KMOD_ALT, True))
-KEYS_MOVE = ((pg.K_LEFT,), (pg.K_UP,), (pg.K_RIGHT,), (pg.K_DOWN,))
-KEYS_JUMP = (pg.K_UP,)
+# support WASD on QWERTY, QWERTZ, AZERTY, Dvorak
+KEYS_MOVE = (
+    (pg.K_LEFT, pg.K_a, pg.K_q),
+    (pg.K_UP, pg.K_w, pg.K_z, pg.K_COMMA),
+    (pg.K_RIGHT, pg.K_d, pg.K_e, pg.K_s)
+)
+KEYS_JUMP = KEYS_MOVE[1]
 KEYS_RESET = (pg.K_r,)
 
 # audio
-MUSIC_VOLUME = 50
-SOUND_VOLUME = 50
+MUSIC_VOLUME = 70
+SOUND_VOLUME = 40
 EVENT_ENDMUSIC = pg.USEREVENT
-SOUNDS = {'die': 8, 'step': 9, 'jump': 9, 'win': 6}
+SOUNDS = {'die': 7, 'step': 9, 'jump': 9}
 SOUND_VOLUMES = {'jump': 2, 'step': .5}
 STEP_SND_DELAY = int(round(.2 * FPS))
 
@@ -75,14 +80,14 @@ PLAYER_JUMP_TIME = 8
 # thing
 THING_MASS = 50
 THING_PTS = [(-10, 15), (10, 15), (10, -15), (-10, -15)]
-DEAD_THING_PTS = THING_PTS
+DEAD_THING_PTS = [(-10, 13.5), (10, 13.5), (10, -13.5), (-10, -13.5)]
 DEAD_THING_POS_OFFSET = (0, 0)
 THING_ELAST = .8
 THING_FRICT = .5
 THING_TURN_THRESHOLD_VEL = 10 ** -3
 AI_DATA = {
-    'walk': {'not_moving': False, 'accel': 1500},
-    'run_away': {'not_moving': False, 'accel': 2500, 'turn_prox': 50, 'speedup_prox': 50, 'max_speedup': .5}
+    'walk': {'not_moving': False, 'accel': 1500, 'img_delay': int(round(.2 * FPS))},
+    'run_away': {'not_moving': False, 'accel': 2500, 'turn_prox': 50, 'speedup_prox': 50, 'max_speedup': .5, 'img_delay': int(round(.1 * FPS))}
 }
 RUN_TIME = int(round(5 * FPS))
 
@@ -107,9 +112,13 @@ LEVEL_DATA = [
                    ((400, 485), -1, 'walk'), ((430, 485), -1, 'walk'),
                    ((600, 485), -1, 'walk'), ((750, 485), 1, 'walk')],
         'shapes': [],
-        'msg': (None, "It's been like this all my life.")
+        'shape_colour': (20, 15, 0),
+        'msg': (None, "It's been like this all my life."),
+        'msg_colour': (30, 20, 0),
+        'msg_arrow': 0,
+        'music': 0
     }, {
-        'start': (100, 485),
+        'start': (50, 485),
         'entrance': ((0, 0), (0, 500)),
         'exit': ((1000, 0), (1000, 500)),
         'things': [((370, 485), -1, 'walk'), ((700, 485), 1, 'walk')],
@@ -117,10 +126,15 @@ LEVEL_DATA = [
             ((150, 500), (250, 470), (240, 500)),
             ((240, 500), (260, 440), (370, 500)),
             ((480, 450), (530, 440), (550, 500), (470, 500)),
-            ((850, 440), (1000, 415), (1000, 450), (970, 500), (860, 500)),
+            ((850, 440), (1000, 415), (1000, 450), (866, 465)),
+            ((915, 500), (925, 455), (985, 450), (950, 500))
         ],
+        'shape_colour': (20, 15, 0),
         'msg': ("Creation itself makes a mockery of my loneliness by placing these other beings in my path.",
-                "As if this entire universe is some kind of game, a little puzzle for nothing more than enjoyment.")
+                "As if this entire universe is some kind of game, a little puzzle for nothing more than enjoyment."),
+        'msg_colour': (30, 20, 0),
+        'msg_arrow': 0,
+        'music': 0
     }, {
         'start': (25, 395),
         'entrance': ((0, 0), (0, 500)),
@@ -129,14 +143,18 @@ LEVEL_DATA = [
         'shapes': [
             ((0, 415), (40, 411), (42, 425), (0, 460)),
             ((100, 500), (130, 460), (280, 430), (340, 500)),
-            ((600, 400), (700, 420), (700, 500), (680, 500)),
+            ((600, 410), (700, 420), (700, 500), (680, 500)),
             ((700, 420), (770, 390), (710, 500), (700, 500)),
             ((710, 500), (740, 435), (800, 450), (850, 500)),
             ((810, 410), (820, 350), (1000, 310), (1000, 450), (850, 440)),
             ((955, 320), (1000, 100), (1000, 310))
         ],
+        'shape_colour': (20, 15, 0),
         'msg': ("I can't even get close enough to anyone to apologise.",
-                "It ends today.")
+                "It ends today."),
+        'msg_colour': (30, 20, 0),
+        'msg_arrow': 0,
+        'music': 0
     }, {
         'start': (50, 165),
         'entrance': ((0, 120), (0, 170)),
@@ -156,10 +174,14 @@ LEVEL_DATA = [
             ((550, 330), (635, 305), (730, 335), (665, 365), (590, 360)),
             ((345, 340), (370, 305), (400, 290), (630, 275), (635, 295), (500, 330)),
             ((205, 500), (215, 485), (255, 480), (250, 500)),
-            ((340, 500), (325, 410), (380, 415), (375, 500)),
-            ((315, 500), (335, 460), (340, 500)),
+            ((420, 500), (405, 410), (460, 415), (455, 500)),
+            ((395, 500), (415, 460), (420, 500)),
         ],
-        'msg': ("I've managed to come by some information about a temple of sorts.", None)
+        'shape_colour': (5, 2, 0),
+        'msg': ("I've managed to come by some information about a temple of sorts.", None),
+        'msg_colour': (150, 100, 0),
+        'msg_arrow': 1,
+        'music': 1
     }, {
         'start': (50, 235),
         'entrance': ((0, 150), (0, 250)),
@@ -181,9 +203,13 @@ LEVEL_DATA = [
             ((960, 320), (950, 260), (1000, 260), (1000, 335)),
             ((930, 500), (935, 430), (1000, 420), (1000, 500))
         ],
+        'shape_colour': (5, 2, 0),
         'msg': (None, None),
+        'msg_colour': (150, 100, 0),
+        'msg_arrow': 1,
+        'music': 1
     }, {
-        'start': (100, 485),
+        'start': (50, 485),
         'entrance': ((0, 300), (0, 500)),
         'exit': ((620, 500), (1000, 500)),
         'things': [((605, 255), -1, 'walk')],
@@ -201,9 +227,12 @@ LEVEL_DATA = [
             (((504, 234), (531, 234), (531, 242), (504, 242)), False),
             ((850, 240), (1000, 240), (1000, 265), (850, 265))
         ],
+        'shape_colour': (10, 10, 10),
         'msg': ("This place is supposed to hold the secret to ridding the world of all evil - or something.",
                 "I suppose that means me.",
                 "I guess I've still got a choice...", None),
+        'msg_colour': (10, 10, 10),
+        'msg_arrow': 2,
         'triggers': [
             (((504, 200), (531, 200), (504, 234), (504, 234)), dotdotdot),
             (((990, 0), (1000, 0), (1000, 240), (990, 240)), lambda level: setattr(level, 'won', True))
@@ -221,9 +250,12 @@ GOOD_RANK = ('HEROIC', 'You went out of your way to avoid kills.  Hero indeed!')
 # graphics
 FONT = 'Chunk.otf'
 MSG_SIZE = 35
-MSG_COLOUR = (0, 0, 0)
 MSG_PADDING = 20
 MSG_LINE_SPACING = 10
 MSG_SPACING = 40
+ARROW_PADDING = 15
 TRANSITION_TIME = int(round(1.5 * FPS))
 TRANSITION_COLOUR = (0, 0, 0, 10)
+PLAYER_IMGS = 14
+THING_IMGS = PLAYER_IMGS
+STEP_IMG_DELAY = int(round(.05 * FPS))

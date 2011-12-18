@@ -129,7 +129,8 @@ by str.splitlines), as does the width restriction.
 
         # if just one line and no shadow, create and return that
         if len(lines) == 1 and shadow is None:
-            return (font.render(lines[0], True, colour), 1)
+            sfc = font.render(lines[0], True, colour)
+            return sfc, 1, (sfc.get_width(), 0)
         # else create surface to blit all the lines to
         h = size * len(lines) + line_spacing * (len(lines) - 1)
         surface = pygame.Surface((width + offset[0], h + offset[1]))
@@ -162,4 +163,4 @@ by str.splitlines), as does the width restriction.
                     else:
                         surface.blit(s, (o[0], h + o[1]))
                 h += size + line_spacing
-        return surface, num_lines
+        return surface, num_lines, (s.get_width(), h - size - line_spacing)

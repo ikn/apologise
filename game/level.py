@@ -65,9 +65,9 @@ class Level:
         self.event_handler = event_handler
         self.frame = conf.FRAME
         event_handler.add_key_handlers(
-            [(conf.KEYS_MOVE[i], [(self.move, (i,))], eh.MODE_HELD) for i in xrange(4)] + [
+            [(conf.KEYS_MOVE[i], [(self.move, (i,))], eh.MODE_HELD) for i in xrange(3)] + [
             (conf.KEYS_JUMP, self.jump, eh.MODE_ONDOWN),
-            (conf.KEYS_RESET, lambda *args: self.init(True), eh.MODE_ONDOWN),
+            (conf.KEYS_RESET, lambda *args: self.init(), eh.MODE_ONDOWN),
             (conf.KEYS_NEXT, self.skip_msg, eh.MODE_ONDOWN)
         ])
         self.transition = False
@@ -89,39 +89,15 @@ class Level:
             print level.pts
         event_handler.add_event_handlers({pg.MOUSEBUTTONDOWN: [(f, (self,))]})
 
-    def init (self, reset_player = False):
+    def init (self):
         data = conf.LEVEL_DATA[self.ID]
         self.run_timer = 0
         self.kills = 0
         self.won = False
-        s = self.space
-        # triggers
-        try:
-            s.remove_static(*self.trigger_shapes)
-        except AttributeError:
-            pass
-        trigger_data = data.get('triggers', [])
-        self.triggers = ts = []
-        self.trigger_shapes = tss = []
-        for pts, cb in trigger_data:
-            ts.append(cb)
-            shape = pm.Poly(s.static_body, pts)
-            shape.group = conf.SHAPE_GROUP
-            shape.layers = conf.TRIGGER_LAYER
-            shape.sensor = True
-            s.add_static(shape)
-            tss.append(shape)
-        self._triggers = []
-        # messages
-        msgs = data['msg']
-        if msgs[0] is None:
-            self.msgs = []
-            self.msg = None
-        else:
-            self.msgs = list(msgs[:-1])
-            self.msg = 0
-        self.end_msg = msgs[-1]
+        # background
+        self.bg = self.game.img('bg{0}.png'.format(self.ID))
         # player
+        s = self.space
         if not hasattr(self, 'player'):
             self.player = Player(self, data['start'])
         # doors
@@ -130,20 +106,7 @@ class Level:
         except AttributeError:
             pass
         else:
-            if reset_player:
-                self.player.body.position = data['start']
-                self.player.on = set()
-                self.player.jumping = False
-            else:
-                # move player to and through entrance
-                a, b = self.exit
-                offset = self.player.body.position - b
-                a, b = data['entrance']
-                if a[0] == b[0]:
-                    offset[0] *= -1
-                else:
-                    offset[1] *= -1
-                self.player.body.position = offset + b
+            self.player.reset(data['start'])
         self.entrance = data['entrance']
         a, b = self.exit = data['exit']
         self.exit_shape = l = pm.Segment(s.static_body, a, b, conf.LINE_RADIUS)
@@ -189,10 +152,53 @@ class Level:
             ss.append(p)
         for pts in rm:
             self.shapes.remove(pts)
-        # background
-        self.bg = self.game.img('bg{0}.png'.format(self.ID))
+        self.shape_colour = data['shape_colour']
+        # messages
+        msgs = data['msg']
+        if msgs[0] is None:
+            self.msgs = []
+            self.msg = None
+        else:
+            self.msgs = list(msgs[:-1])
+            self.msg = 0
+        self.end_msg = msgs[-1]
+        self.msg_colour = data['msg_colour']
+        self.msg_arrow = self.game.img('arrow{0}.png'.format(data['msg_arrow']))
+        # music
+        try:
+            music = data['music']
+        except KeyError:
+            self.game.music = []
+            self.game.play_music()
+        else:
+            try:
+                if music != self.music:
+                    raise AttributeError()
+            except AttributeError:
+                self.music = music
+                self.game.find_music(str(music))
+                self.game.play_music()
+        # triggers
+        try:
+            s.remove_static(*self.trigger_shapes)
+        except AttributeError:
+            pass
+        trigger_data = data.get('triggers', [])
+        self.triggers = ts = []
+        self.trigger_shapes = tss = []
+        for pts, cb in trigger_data:
+            ts.append(cb)
+            shape = pm.Poly(s.static_body, pts)
+            shape.group = conf.SHAPE_GROUP
+            shape.layers = conf.TRIGGER_LAYER
+            shape.sensor = True
+            s.add_static(shape)
+            tss.append(shape)
+        self._triggers = []
 
     def next_level (self):
+        self.game.files = {}
+        self.game.imgs = {}
         self.total_kills += self.kills
         self.ID += 1
         if self.ID < len(conf.LEVEL_DATA):
@@ -225,8 +231,6 @@ class Level:
                 self.run_timer = conf.RUN_TIME
 
     def start_transition (self):
-        for i in xrange(8):
-            self.game.play_snd('win')
         self.transition = conf.TRANSITION_TIME
         self.transition_sfc = pg.Surface(conf.RES).convert_alpha()
         self.transition_sfc.fill(conf.TRANSITION_COLOUR)
@@ -288,7 +292,7 @@ class Level:
             ts.append(dt)
 
     def draw (self, screen):
-        if self.transition:
+        if self.transition and self.transition != conf.TRANSITION_TIME - 1:
             screen.blit(self.transition_sfc, (0, 0))
             return True
         # background
@@ -296,33 +300,37 @@ class Level:
         # shapes
         for pts in self.shapes[4:]:
             if len(pts) == 2:
-                pg.draw.line(screen, (0, 0, 0), pts[0], pts[1], conf.LINE_RADIUS * 4)
+                pg.draw.line(screen, self.shape_colour, pts[0], pts[1], conf.LINE_RADIUS * 4)
             else:
-                pg.draw.polygon(screen, (0, 0, 0), pts)
-        # doors
-        #for c, (a, b) in (((0, 0, 255), self.entrance), ((255, 0, 0), self.exit)):
-            #pg.draw.line(screen, c, a, b, conf.LINE_RADIUS * 4)
+                pg.draw.polygon(screen, self.shape_colour, pts)
         # messages
         if self.msg is not None:
             if self.msg is True:
                 texts = self.msgs + [self.end_msg]
+                arrow = not self.transition
             else:
                 texts = self.msgs[:self.msg + 1]
+                arrow = self.msg < len(self.msgs) - 1
             size = conf.MSG_SIZE
             font = (conf.FONT, size, False)
             pad = conf.MSG_PADDING
             w, h = conf.RES
             line_spacing = conf.MSG_LINE_SPACING
-            args = [font, None, conf.MSG_COLOUR, None, w - 2 * pad, 0, False, line_spacing]
+            args = [font, None, self.msg_colour, None, w - 2 * pad, 0, False, line_spacing]
             y = pad
             spacing = conf.MSG_SPACING
             for text in texts:
                 args[1] = text
-                sfc, lines = self.game.img(args)
+                sfc, lines, br = self.game.img(args)
                 screen.blit(sfc, (pad, y))
-                y += lines * size + (lines - 1) * line_spacing + spacing
+                dy = lines * size + (lines - 1) * line_spacing + spacing
+                y += dy
+            # arrow
+            if arrow:
+                o = (size - self.msg_arrow.get_height()) / 2
+                screen.blit(self.msg_arrow, (br[0] + pad + conf.ARROW_PADDING, br[1] + y - dy + o))
         # entities
-        self.player.draw(screen)
         for t in self.things:
             t.draw(screen)
+        self.player.draw(screen)
         return True

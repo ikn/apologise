@@ -10,7 +10,7 @@ class Player:
         self.level = level
         self.mass = conf.PLAYER_MASS
         pts = conf.PLAYER_PTS
-        self.body = b = pm.Body(self.mass, pm.inf) #pm.moment_for_poly(self.mass, pts)
+        self.body = b = pm.Body(self.mass, pm.inf)
         b.position = tuple(p)
         s = self.shape = pm.Poly(b, pts)
         s.owner = self
@@ -24,10 +24,27 @@ class Player:
         s.layers = conf.DEATH_LAYER
         level.space.add(s)
 
+        # images
+        f = self.level.game.img
+        self.imgs = [f('player{0}.png'.format(i)) for i in xrange(conf.PLAYER_IMGS)]
+        w, h = self.imgs[0].get_size()
+        self.img_offset = (-w / 2., -h / 2.)
+        self.death_img = self.level.game.img('death.png')
+        w, h = self.death_img.get_size()
+        self.death_img_offset = (-w / 2., -h / 2.)
+
+        self.reset()
+
+    def reset (self, p = None):
+        if p is not None:
+            self.body.position = p
+        self.img = 0
+        self.on = set()
         self._move = set()
         self.jumping = False
+        self.dirn = 1
         self.step_snd = conf.STEP_SND_DELAY
-        self.on = set()
+        self.step_img = conf.STEP_IMG_DELAY
         self.dirty = True
 
     def jump (self):
@@ -43,17 +60,32 @@ class Player:
         b = self.body
         self.pos = b.position
         # move
-        f = pm.Vec2d((0, 0))
+        f = 0
         move = self._move
         for d in move:
             if d in (0, 2):
-                f[d % 2] += 1 if d > 1 else -1
-        if f[0] != 0 and self.on:
-            self.step_snd -= 1
-            if self.step_snd == 0:
-                self.level.game.play_snd('step')
-                self.step_snd = conf.STEP_SND_DELAY
-        b.apply_impulse(f * conf.PLAYER_ACCEL)
+                f += 1 if d > 1 else -1
+        if f != 0:
+            d = 1 if f > 0 else -1
+            if d != self.dirn:
+                self.dirn = d
+                self.img = 0
+                self.dirty = True
+            self.step_img -= 1
+            if self.step_img == 0:
+                self.img += 1
+                self.img %= conf.PLAYER_IMGS
+                self.dirty = True
+                self.step_img = conf.STEP_IMG_DELAY
+            if self.on:
+                self.step_snd -= 1
+                if self.step_snd == 0:
+                    self.level.game.play_snd('step')
+                    self.step_snd = conf.STEP_SND_DELAY
+        elif self.img != 0:
+            self.img = 0
+            self.dirty = True
+        b.apply_impulse((f * conf.PLAYER_ACCEL, 0))
         # jump
         if 1 in move and self.jumping:
             b.apply_impulse((0, -conf.PLAYER_JUMP_FORCE))
@@ -63,7 +95,10 @@ class Player:
         self._move = set()
 
     def draw (self, screen):
-        pg.draw.polygon(screen, (0, 0, 0), self.shape.get_points())
-        p = [ir(x) for x in self.body.position]
-        pg.draw.circle(screen, (0, 0, 0), p, conf.DEATH_RADIUS, 1)
+        p = self.body.position
+        img = self.imgs[self.img]
+        if self.dirn == -1:
+            img = pg.transform.flip(img, True, False)
+        for img, o in ((img, self.img_offset), (self.death_img, self.death_img_offset)):
+            screen.blit(img, p + o)
         self.dirty = False

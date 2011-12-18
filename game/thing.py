@@ -8,7 +8,7 @@ class Thing:
         self.level = level
         self.mass = conf.THING_MASS
         pts = conf.THING_PTS
-        self.body = b = pm.Body(self.mass, pm.inf) #pm.moment_for_poly(self.mass, pts))
+        self.body = b = pm.Body(self.mass, pm.inf)
         b.position = tuple(p)
         s = self.shape = pm.Poly(b, pts)
         s.owner = self
@@ -16,6 +16,13 @@ class Thing:
         s.friction = conf.THING_FRICT
         s.layers = conf.COLLISION_LAYER | conf.DEATH_LAYER
         level.space.add(b, s)
+
+        # images
+        f = self.level.game.img
+        self.imgs = [f('thing{0}.png'.format(i)) for i in xrange(conf.THING_IMGS)]
+        self.img = 0
+        w, h = self.imgs[0].get_size()
+        self.img_offset = (-w / 2., -h / 2.)
 
         self.dirn = d
         self.jumping = False
@@ -30,6 +37,7 @@ class Thing:
             s = self.default_ai
         self.ai = s
         self.ai_data = dict(conf.AI_DATA[s])
+        self.ai_data['step_img'] = self.ai_data['img_delay']
 
     def move (self, d):
         if self.ai in ('walk', 'run_away'):
@@ -75,12 +83,23 @@ class Thing:
                 if data['not_moving']:
                     data['not_moving'] = False
                     self.dirn *= -1
+                    self.img = 0
+                    self.dirty = True
                     turned = True
                 else:
                     if not self.first:
                         if not self.jump():
                             self.dirn *= -1
+                            self.img = 0
+                            self.dirty = True
                             turned = True
+            # image
+            data['step_img'] -= 1
+            if data['step_img'] == 0:
+                self.img += 1
+                self.img %= conf.THING_IMGS
+                self.dirty = True
+                data['step_img'] = data['img_delay']
         if ai == 'run_away' and not turned:
             # run from player
             p_p = self.level.player.pos
@@ -90,20 +109,25 @@ class Thing:
             r = conf.DEATH_RADIUS
             if d < r + data['turn_prox']:
                 data['not_moving'] = False
-                self.dirn = 1 if p_p[0] < p[0] else -1
+                d = 1 if p_p[0] < p[0] else -1
+                if d != self.dirn:
+                    self.dirn = d
+                    self.img = 0
+                    self.dirty = True
         # move
         self.move(self.dirn + 1)
         if self.first:
             self.first = False
 
     def draw (self, screen):
-        pg.draw.polygon(screen, (0, 0, 0), self.shape.get_points())
+        p = self.body.position
+        screen.blit(self.imgs[self.img], p + self.img_offset)
         self.dirty = False
 
 class DeadThing:
     def __init__ (self, level, p):
         self.level = level
-        self.body = b = pm.Body(conf.THING_MASS, pm.inf) #pm.moment_for_poly(self.mass, pts))
+        self.body = b = pm.Body(conf.THING_MASS, pm.inf)
         b.position = tuple(p)
         pts = conf.DEAD_THING_PTS
         s = self.shape = pm.Poly(b, pts)
@@ -112,6 +136,11 @@ class DeadThing:
         s.friction = conf.THING_FRICT
         s.layers = conf.COLLISION_LAYER
         level.space.add(b, s)
+
+        # image
+        self.img = self.level.game.img('deadthing.png')
+        w, h = self.img.get_size()
+        self.img_offset = (-w / 2., -h / 2.)
 
         self.moving = True
         self.on = set()
@@ -139,5 +168,6 @@ class DeadThing:
             self.level.space.add_static(s)
 
     def draw (self, screen):
-        pg.draw.polygon(screen, (0, 0, 0), self.shape.get_points())
+        p = self.body.position
+        screen.blit(self.img, p + self.img_offset)
         self.dirty = False

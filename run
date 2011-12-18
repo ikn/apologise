@@ -103,7 +103,7 @@ EventHandler_instance in its event_handler attribute.
             pygame.VIDEORESIZE: self._resize_cb,
             conf.EVENT_ENDMUSIC: self.play_music
         }, [
-            (conf.KEYS_FULLSCREEN, self.toggle_fullscreen, eh.MODE_ONDOWN),
+            #(conf.KEYS_FULLSCREEN, self.toggle_fullscreen, eh.MODE_ONDOWN),
             (conf.KEYS_MINIMISE, self.minimise, eh.MODE_ONDOWN)
         ], False, self.quit)
         # store current backend in history, if any
@@ -202,7 +202,7 @@ size: scale the image.  Can be an (x, y) size, a rect (in which case its
         got_size = size is not None and size != 1 and not text
         # else new: load/render
         if text:
-            img, lines = self.fonts.text(*data)
+            img, lines, br = self.fonts.text(*data)
             img = img.convert_alpha()
         else:
             data = conf.IMG_DIR + data
@@ -230,7 +230,7 @@ size: scale the image.  Can be an (x, y) size, a rect (in which case its
         else:
             # speed up blitting (if not resized, this is already done)
             img = self.convert_img(img)
-        result = (img, lines) if text else img
+        result = (img, lines, br) if text else img
         if got_size or text:
             # add to cache (if not resized, this is in the file cache)
             self.imgs[key] = result
@@ -261,7 +261,7 @@ volume: float to scale volume by.
         snd.set_volume(conf.SOUND_VOLUME * conf.SOUND_VOLUMES.get(base_ID, 1) * volume * .01)
         snd.play()
 
-    def find_music (self):
+    def find_music (self, start = None):
         """Store a list of music files."""
         d = conf.MUSIC_DIR
         try:
@@ -270,7 +270,7 @@ volume: float to scale volume by.
             # no directory
             self.music = []
         else:
-            self.music = [d + f for f in files if os.path.isfile(d + f)]
+            self.music = [d + f for f in files if os.path.isfile(d + f) and (start is None or f.startswith(start))]
 
     def play_music (self, event = None):
         """Play next piece of music."""
@@ -360,8 +360,10 @@ volume: float to scale volume by.
 
     def minimise (self, *args):
         """Minimise the display, pausing if possible (and necessary)."""
-        if isinstance(self.backend, Level) and not isinstance(self.backend, Title):
+        try:
              self.backend.pause()
+        except AttributeError:
+            pass
         pygame.display.iconify()
 
     def _resize_cb (self, event):
