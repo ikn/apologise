@@ -80,6 +80,7 @@ class Level:
         s.damping = conf.DAMPING
         s.collision_bias = 0
         self.ID = ID
+        self.total_kills = 0
         self.init()
 
         self.pts = []
@@ -91,6 +92,7 @@ class Level:
     def init (self, reset_player = False):
         data = conf.LEVEL_DATA[self.ID]
         self.run_timer = 0
+        self.kills = 0
         self.won = False
         s = self.space
         # triggers
@@ -170,7 +172,11 @@ class Level:
         self.shapes = [((0, 0), (1000, 0)), ((1000, 0), (1000, 540)), ((0, 500), (1000, 500)), ((0, 0), (0, 500))]
         self.shapes += data['shapes']
         self.shapes_shapes = ss = []
+        rm = []
         for pts in self.shapes:
+            if pts[1] is False:
+                rm.append(pts)
+                pts = pts[0]
             if len(pts) == 2:
                 p = pm.Segment(s.static_body, pts[0], pts[1], conf.LINE_RADIUS)
             else:
@@ -181,8 +187,13 @@ class Level:
             p.layers = conf.COLLISION_LAYER
             s.add_static(p)
             ss.append(p)
+        for pts in rm:
+            self.shapes.remove(pts)
+        # background
+        self.bg = self.game.img('bg{0}.png'.format(self.ID))
 
     def next_level (self):
+        self.total_kills += self.kills
         self.ID += 1
         if self.ID < len(conf.LEVEL_DATA):
             self.init()
@@ -205,6 +216,7 @@ class Level:
 
     def kill_thing (self, s):
         self.game.play_snd('die')
+        self.kills += 1
         for t in self.things:
             if s is t.shape:
                 t.dead = True
@@ -280,16 +292,16 @@ class Level:
             screen.blit(self.transition_sfc, (0, 0))
             return True
         # background
-        screen.fill((255, 255, 255))
+        screen.blit(self.bg, (0, 0))
         # shapes
-        for pts in self.shapes:
+        for pts in self.shapes[4:]:
             if len(pts) == 2:
                 pg.draw.line(screen, (0, 0, 0), pts[0], pts[1], conf.LINE_RADIUS * 4)
             else:
                 pg.draw.polygon(screen, (0, 0, 0), pts)
         # doors
-        for c, (a, b) in (((0, 0, 255), self.entrance), ((255, 0, 0), self.exit)):
-            pg.draw.line(screen, c, a, b, conf.LINE_RADIUS * 4)
+        #for c, (a, b) in (((0, 0, 255), self.entrance), ((255, 0, 0), self.exit)):
+            #pg.draw.line(screen, c, a, b, conf.LINE_RADIUS * 4)
         # messages
         if self.msg is not None:
             if self.msg is True:

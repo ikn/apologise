@@ -205,6 +205,7 @@ size: scale the image.  Can be an (x, y) size, a rect (in which case its
             img, lines = self.fonts.text(*data)
             img = img.convert_alpha()
         else:
+            data = conf.IMG_DIR + data
             # also cache loaded images to reduce file I/O
             if data in self.files:
                 img = self.files[data]
