@@ -93,6 +93,8 @@ class Thing:
                             self.img = 0
                             self.dirty = True
                             turned = True
+            else:
+                data['not_moving'] = False
             # image
             data['step_img'] -= 1
             if data['step_img'] == 0:
@@ -121,7 +123,10 @@ class Thing:
 
     def draw (self, screen):
         p = self.body.position
-        screen.blit(self.imgs[self.img], p + self.img_offset)
+        img = self.imgs[self.img]
+        if self.dirn == -1:
+            img = pg.transform.flip(img, True, False)
+        screen.blit(img, p + self.img_offset)
         self.dirty = False
 
 class DeadThing:

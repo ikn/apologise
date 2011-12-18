@@ -9,13 +9,13 @@ from pygame.time import wait
 if os.name == 'nt':
     # for Windows freeze support
     import pygame._view
-from game.ext import evthandler as eh
-from game.ext.fonthandler import Fonts
+from apologise.ext import evthandler as eh
+from apologise.ext.fonthandler import Fonts
 
 pygame.mixer.pre_init(buffer = 1024)
 pygame.init()
-from game.level import Level
-from game import conf
+from apologise.level import Level
+from apologise import conf
 
 ir = lambda x: int(round(x))
 

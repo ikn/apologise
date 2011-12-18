@@ -83,12 +83,6 @@ class Level:
         self.total_kills = 0
         self.init()
 
-        self.pts = []
-        def f (e, level):
-            level.pts.append(e.pos)
-            print level.pts
-        event_handler.add_event_handlers({pg.MOUSEBUTTONDOWN: [(f, (self,))]})
-
     def init (self):
         data = conf.LEVEL_DATA[self.ID]
         self.run_timer = 0
