@@ -1,3 +1,5 @@
+from random import random
+
 import pygame as pg
 import pymunk as pm
 
@@ -39,6 +41,13 @@ class Thing:
         self.ai_data = dict(conf.AI_DATA[s])
         self.ai_data['step_img'] = self.ai_data['img_delay']
 
+    def on_shape (self):
+        for s in self.on:
+            if not hasattr(s, 'owner'):
+                return True
+                break
+        return False
+
     def move (self, d):
         if self.ai in ('walk', 'run_away'):
             data = self.ai_data
@@ -53,6 +62,13 @@ class Thing:
             f = [0, 0]
             f[d % 2] += (1 if d > 1 else -1) * accel
             self.body.apply_impulse(f)
+            # particles
+            if self.on_shape():
+                amount = conf.MOVE_PARTICLES * accel
+                a = int(amount)
+                amount = a + (random() <= amount - a)
+                if amount > 0:
+                    self.level.spawn_particles(self.pos + (0, 15), (self.level.shape_colour, amount))
 
     def die (self):
         self.level.space.remove(self.body, self.shape)
@@ -60,13 +76,14 @@ class Thing:
     def jump (self):
         if self.on:
             self.level.game.play_snd('jump')
+            self.level.spawn_particles(self.pos + (0, 15), (self.level.shape_colour, conf.JUMP_PARTICLES))
             self.body.apply_impulse((0, -conf.PLAYER_INITIAL_JUMP_FORCE))
             self.jumping = conf.PLAYER_JUMP_TIME
-            return True
         else:
             return False
 
     def update (self):
+        self.pos = self.body.position
         # AI
         ai = self.ai
         data = self.ai_data
@@ -105,7 +122,7 @@ class Thing:
         if ai == 'run_away' and not turned:
             # run from player
             p_p = self.level.player.pos
-            p = self.body.position
+            p = self.pos
             d = p_p.get_distance(p)
             data['prox'] = d
             r = conf.DEATH_RADIUS

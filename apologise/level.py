@@ -1,4 +1,5 @@
-from math import pi
+from math import pi, cos, sin
+from random import random, randint
 
 import pygame as pg
 import pymunk as pm
@@ -128,6 +129,7 @@ class Level:
         self.run_timer = 0
         self.kills = 0
         self.won = False
+        self.particles = []
         # background
         self.bg = self.game.img('bg{0}.png'.format(self.ID))
         # player
@@ -269,6 +271,24 @@ class Level:
         self.transition_sfc = pg.Surface(conf.RES).convert_alpha()
         self.transition_sfc.fill(conf.TRANSITION_COLOUR)
 
+    def spawn_particles (self, pos, *colours):
+        # colours is a list of (colour, amount) tuples
+        pos = list(pos)
+        ptcls = []
+        max_speed = conf.PARTICLE_SPEED
+        life = conf.PARTICLE_LIFE
+        max_size = conf.PARTICLE_SIZE
+        for c, amount in colours:
+            while amount > 0:
+                size = randint(1, max_size)
+                amount -= size
+                angle = random() * 2 * pi
+                speed = random() * max_speed
+                v = [speed * cos(angle), speed * sin(angle)]
+                t = randint(0, life)
+                ptcls.append((c, pm.Vec2d(pos), pm.Vec2d(v), t, size))
+        self.particles.append(ptcls)
+
     def skip_msg (self, *args):
         if self.msg is not None:
             if self.won and not self.transition:
@@ -293,6 +313,7 @@ class Level:
         self.init()
 
     def update (self):
+        # blocking messages/finished
         if self.won:
             if self.transition:
                 self.transition -= 1
@@ -306,12 +327,14 @@ class Level:
             return
         elif self.msg is not None and self.msg < len(self.msgs) - 1:
             return
+        # triggers
         for cb, shape in self._triggers:
             cb(self)
             self.space.remove_static(shape)
             self.triggers.remove(cb)
             self.trigger_shapes.remove(shape)
         self._triggers = []
+        # physics/entities
         self.space.step(conf.STEP)
         self.player.update()
         rm = []
@@ -334,6 +357,21 @@ class Level:
             dt = DeadThing(self, t.body.position + conf.DEAD_THING_POS_OFFSET)
             dt.dead = False
             ts.append(dt)
+        # particles
+        i = 0
+        ptcls = self.particles
+        while i < len(ptcls):
+            if ptcls[i]:
+                new = []
+                for c, p, v, t, size in ptcls[i]:
+                    p += v
+                    t -= 1
+                    if t > 0:
+                        new.append((c, p, v, t, size))
+                ptcls[i] = new
+                i += 1
+            else:
+                ptcls.pop(i)
 
     def draw (self, screen):
         if self.transition and self.transition != conf.TRANSITION_TIME - 1:
@@ -377,4 +415,8 @@ class Level:
         for t in self.things:
             t.draw(screen)
         self.player.draw(screen)
+        # particles
+        for ptcls in self.particles:
+            for c, p, v, t, size in ptcls:
+                screen.fill(c, (ir(p[0]), ir(p[1]), size, size))
         return True

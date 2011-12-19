@@ -1,3 +1,5 @@
+from random import random
+
 import pygame as pg
 import pymunk as pm
 
@@ -11,7 +13,7 @@ class Player:
         self.mass = conf.PLAYER_MASS
         pts = conf.PLAYER_PTS
         self.body = b = pm.Body(self.mass, pm.inf)
-        b.position = tuple(p)
+        self.pos = b.position = tuple(p)
         s = self.shape = pm.Poly(b, pts)
         s.owner = self
         s.elasticity = conf.PLAYER_ELAST
@@ -47,9 +49,18 @@ class Player:
         self.step_img = conf.STEP_IMG_DELAY
         self.dirty = True
 
+    def on_shape (self):
+        for s in self.on:
+            if not hasattr(s, 'owner'):
+                return True
+                break
+        return False
+
     def jump (self):
         if self.on:
-            self.level.game.play_snd('jump')
+            if self.on_shape():
+                self.level.game.play_snd('jump')
+                self.level.spawn_particles(self.pos + (0, 15), (self.level.shape_colour, conf.JUMP_PARTICLES))
             self.body.apply_impulse((0, -conf.PLAYER_INITIAL_JUMP_FORCE))
             self.jumping = conf.PLAYER_JUMP_TIME
 
@@ -77,11 +88,17 @@ class Player:
                 self.img %= conf.PLAYER_IMGS
                 self.dirty = True
                 self.step_img = conf.STEP_IMG_DELAY
-            if self.on:
+            if self.on_shape():
                 self.step_snd -= 1
                 if self.step_snd == 0:
                     self.level.game.play_snd('step')
                     self.step_snd = conf.STEP_SND_DELAY
+                # particles
+                amount = conf.MOVE_PARTICLES * conf.PLAYER_ACCEL
+                a = int(amount)
+                amount = a + (random() <= amount - a)
+                if amount > 0:
+                    self.level.spawn_particles(self.pos + (0, 15), (self.level.shape_colour, amount))
         elif self.img != 0:
             self.img = 0
             self.dirty = True
