@@ -79,6 +79,7 @@ class Thing:
             self.level.spawn_particles(self.pos + (0, 15), (self.level.shape_colour, conf.JUMP_PARTICLES))
             self.body.apply_impulse((0, -conf.PLAYER_INITIAL_JUMP_FORCE))
             self.jumping = conf.PLAYER_JUMP_TIME
+            return True
         else:
             return False
 

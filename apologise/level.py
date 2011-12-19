@@ -243,18 +243,20 @@ class Level:
             self.end()
 
     def move (self, k, t, m, d):
-        try:
-            self.player.move(d)
-        except AttributeError:
-            # no player yet
-            pass
+        if not self.won and (self.msg is None or self.msg >= len(self.msgs) - 1):
+            try:
+                self.player.move(d)
+            except AttributeError:
+                # no player yet
+                pass
 
     def jump (self, k, t, m):
-        try:
-            self.player.jump()
-        except AttributeError:
-            # no player yet
-            pass
+        if not self.won and (self.msg is None or self.msg >= len(self.msgs) - 1):
+            try:
+                self.player.jump()
+            except AttributeError:
+                # no player yet
+                pass
 
     def kill_thing (self, s):
         self.game.play_snd('die')
