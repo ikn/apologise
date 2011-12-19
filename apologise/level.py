@@ -106,7 +106,8 @@ class Level:
             [(conf.KEYS_MOVE[i], [(self.move, (i,))], eh.MODE_HELD) for i in xrange(3)] + [
             (conf.KEYS_JUMP, self.jump, eh.MODE_ONDOWN),
             (conf.KEYS_RESET, lambda *args: self.init(), eh.MODE_ONDOWN),
-            (conf.KEYS_NEXT, self.skip_msg, eh.MODE_ONDOWN)
+            (conf.KEYS_NEXT, self.skip_msg, eh.MODE_ONDOWN),
+            (conf.KEYS_BACK, self.toggle_paused, eh.MODE_ONDOWN)
         ])
         self.transition = False
         # space
@@ -119,11 +120,12 @@ class Level:
         s.collision_bias = 0
         self.ID = ID
         self.total_kills = 0
+        self.paused = False
         self.init()
 
     def init (self):
-        # don't allow reset when already won
-        if self.transition:
+        # don't allow reset when paused or already won
+        if self.paused or self.transition:
             return
         data = conf.LEVEL_DATA[self.ID]
         self.run_timer = 0
@@ -242,16 +244,24 @@ class Level:
         elif self.ID == len(conf.LEVEL_DATA):
             self.end()
 
+    def toggle_paused (self, *args):
+        if self.paused:
+            self.paused = False
+            pg.mixer.music.set_volume(conf.MUSIC_VOLUME * .01)
+        else:
+            self.paused = True
+            pg.mixer.music.set_volume(conf.PAUSED_MUSIC_VOLUME * .01)
+
     def move (self, k, t, m, d):
-        if not self.won and (self.msg is None or self.msg >= len(self.msgs) - 1):
+        if not self.paused and not self.won and (self.msg is None or self.msg >= len(self.msgs) - 1):
             try:
                 self.player.move(d)
             except AttributeError:
                 # no player yet
                 pass
 
-    def jump (self, k, t, m):
-        if not self.won and (self.msg is None or self.msg >= len(self.msgs) - 1):
+    def jump (self, *args):
+        if not self.paused and not self.won and (self.msg is None or self.msg >= len(self.msgs) - 1):
             try:
                 self.player.jump()
             except AttributeError:
@@ -315,6 +325,8 @@ class Level:
         self.init()
 
     def update (self):
+        if self.paused:
+            return
         # blocking messages/finished
         if self.won:
             if self.transition:
@@ -376,6 +388,8 @@ class Level:
                 ptcls.pop(i)
 
     def draw (self, screen):
+        if self.paused and not self.dirty:
+            return False
         if self.transition and self.transition != conf.TRANSITION_TIME - 1:
             screen.blit(self.transition_sfc, (0, 0))
             return True

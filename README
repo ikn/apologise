@@ -4,6 +4,10 @@ near (he's cursed or something).
 This was made for Ludum Dare 22, a 48-hour competition in December 2011.
 Theme: alone.
 
+This version has some minor post-competition changes: fixes for a couple of
+exploits, jumps in level 5 less annoying, pausing, particles, and performance
+improvements.
+
     DEPENDENCIES
 
 Python (2.6 or later 2.x)
