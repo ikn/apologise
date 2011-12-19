@@ -248,9 +248,11 @@ class Level:
         if self.paused:
             self.paused = False
             pg.mixer.music.set_volume(conf.MUSIC_VOLUME * .01)
+            pg.mouse.set_visible(False)
         else:
             self.paused = True
             pg.mixer.music.set_volume(conf.PAUSED_MUSIC_VOLUME * .01)
+            pg.mouse.set_visible(True)
 
     def move (self, k, t, m, d):
         if not self.paused and not self.won and (self.msg is None or self.msg >= len(self.msgs) - 1):

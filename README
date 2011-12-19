@@ -29,6 +29,7 @@ reach other areas.
 arrow keys, WASD: move.
 R: reset the level.
 enter, space: advance text.
+escape, backspace: pause/unpause.
 
 WASD works for other keyboard layouts too: QWERTZ, AZERTY, Dvorak, Colemak.
 
