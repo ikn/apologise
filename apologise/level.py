@@ -398,11 +398,11 @@ class Level:
         # background
         screen.blit(self.bg, (0, 0))
         # shapes
-        for pts in self.shapes[4:]:
-            if len(pts) == 2:
-                pg.draw.line(screen, self.shape_colour, pts[0], pts[1], conf.LINE_RADIUS * 4)
-            else:
-                pg.draw.polygon(screen, self.shape_colour, pts)
+        #for pts in self.shapes[4:]:
+            #if len(pts) == 2:
+                #pg.draw.line(screen, self.shape_colour, pts[0], pts[1], conf.LINE_RADIUS * 4)
+            #else:
+                #pg.draw.polygon(screen, self.shape_colour, pts)
         # messages
         if self.msg is not None:
             if self.msg is True:
