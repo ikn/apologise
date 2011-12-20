@@ -5,7 +5,8 @@ This was made for Ludum Dare 22, a 48-hour competition in December 2011.
 Theme: alone.
 
 This version has some minor post-competition changes: fixes for a couple of
-exploits, jumps in level 5 less annoying, pausing, and particles.
+exploits, jumps in level 5 less annoying, pausing, antialiasing the silhouetted
+shapes, no jump/walking sounds when on a person-thing, and particles.
 
     DEPENDENCIES
 
