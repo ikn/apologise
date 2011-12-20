@@ -245,6 +245,8 @@ class Level:
             self.end()
 
     def toggle_paused (self, *args):
+        if self.transition:
+            return
         if self.paused:
             self.paused = False
             pg.mixer.music.set_volume(conf.MUSIC_VOLUME * .01)
@@ -305,6 +307,8 @@ class Level:
         self.particles.append(ptcls)
 
     def skip_msg (self, *args):
+        if self.paused:
+            return
         if self.msg is not None:
             if self.won and not self.transition:
                 self.start_transition()
