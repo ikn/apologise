@@ -253,6 +253,7 @@ class Level:
             self.paused = True
             pg.mixer.music.set_volume(conf.PAUSED_MUSIC_VOLUME * .01)
             pg.mouse.set_visible(True)
+            self.dirty = True
 
     def move (self, k, t, m, d):
         if not self.paused and not self.won and (self.msg is None or self.msg >= len(self.msgs) - 1):
@@ -397,12 +398,6 @@ class Level:
             return True
         # background
         screen.blit(self.bg, (0, 0))
-        # shapes
-        #for pts in self.shapes[4:]:
-            #if len(pts) == 2:
-                #pg.draw.line(screen, self.shape_colour, pts[0], pts[1], conf.LINE_RADIUS * 4)
-            #else:
-                #pg.draw.polygon(screen, self.shape_colour, pts)
         # messages
         if self.msg is not None:
             if self.msg is True:
@@ -437,4 +432,38 @@ class Level:
         for ptcls in self.particles:
             for c, p, v, t, size in ptcls:
                 screen.fill(c, (ir(p[0]), ir(p[1]), size, size))
+        # pause screen
+        if self.paused:
+            sfc = pg.Surface(conf.RES).convert_alpha()
+            if self.ID < 3:
+                c = (210, 210, 170)
+                d = 220
+            elif self.ID < 5:
+                c = (160, 160, 110)
+                d = 120
+            else:
+                c = (180, 180, 165)
+                d = 200
+            sfc.fill((0, 0, 0, d))
+            screen.blit(sfc, (0, 0))
+            # text
+            if self.ID != 0:
+                text = ('PAUSED', 'move: arrow keys, WASD\nreset: R')
+                size = conf.RANK_FONT_SIZE
+                font = (conf.FONT, size, False)
+                pad = conf.RANK_PADDING
+                w, h = conf.RES
+                args = [font, None, c, None, w - 2 * pad, 1, False, conf.RANK_LINE_SPACING]
+                spacing = conf.RANK_SPACING
+                args[1] = text[0]
+                sfc1, lines, br = self.game.img(args)
+                args[1] = text[1]
+                sfc2, lines, br = self.game.img(args)
+                # blit
+                dy = sfc1.get_height() + spacing
+                y = (h - dy - sfc2.get_height()) / 2
+                screen.blit(sfc1, ((w - sfc1.get_width()) / 2, y))
+                screen.blit(sfc2, ((w - sfc2.get_width()) / 2, y + dy))
+        if self.dirty:
+            self.dirty = False
         return True
