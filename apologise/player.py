@@ -59,7 +59,7 @@ class Player:
     def jump (self):
         if self.on:
             if self.on_shape():
-                self.level.game.play_snd('jump')
+                self.level.game.play_snd('step', conf.SOUND_VOLUMES['jump'])
                 self.level.spawn_particles(self.pos + (0, 15), (self.level.shape_colour, conf.JUMP_PARTICLES))
             self.body.apply_impulse((0, -conf.PLAYER_INITIAL_JUMP_FORCE))
             self.jumping = conf.PLAYER_JUMP_TIME

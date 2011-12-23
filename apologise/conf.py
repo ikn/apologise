@@ -48,10 +48,10 @@ KEYS_RESET = (pg.K_r,)
 # audio
 MUSIC_VOLUME = 70
 PAUSED_MUSIC_VOLUME = 20
-SOUND_VOLUME = 40
+SOUND_VOLUME = 50
 EVENT_ENDMUSIC = pg.USEREVENT
-SOUNDS = {'die': 7, 'step': 9, 'jump': 9}
-SOUND_VOLUMES = {'jump': 2, 'step': .5}
+SOUNDS = {'die': 1, 'step': 13}
+SOUND_VOLUMES = {'step': .5, 'jump': 4}
 STEP_SND_DELAY = int(round(.2 * FPS))
 
 # world
